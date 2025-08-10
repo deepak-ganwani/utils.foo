@@ -19,7 +19,7 @@ export default function JSONFormatter() {
       setOutput(formattedJSON);
       setError('');
     } catch (err) {
-      setError('Invalid JSON: ' + err.message);
+      setError('Invalid JSON format. Please check your syntax.');
       setOutput('');
     }
   };
@@ -31,7 +31,7 @@ export default function JSONFormatter() {
       setOutput(minifiedJSON);
       setError('');
     } catch (err) {
-      setError('Invalid JSON: ' + err.message);
+      setError('Invalid JSON format. Please check your syntax.');
       setOutput('');
     }
   };
@@ -49,7 +49,7 @@ export default function JSONFormatter() {
       setOutput(escapedJSON);
       setError('');
     } catch (err) {
-      setError('Error escaping JSON: ' + err.message);
+      setError('Error escaping JSON. Please check your input format.');
       setOutput('');
     }
   };
@@ -67,7 +67,45 @@ export default function JSONFormatter() {
       setOutput(unescapedJSON);
       setError('');
     } catch (err) {
-      setError('Error unescaping JSON: ' + err.message);
+      setError('Error unescaping JSON. Please check your input format.');
+      setOutput('');
+    }
+  };
+
+  const queryJSON = () => {
+    try {
+      setError('');
+      if (query.length === 0) {
+        setOutput(input)
+        return
+      }
+      const obj = JSON.parse(input);
+      const regex = /([^[.]+)|\[(\d+)\]/g;
+      const tokens = [];
+      let match;
+      while ((match = regex.exec(query))) {
+        if (match[1]) tokens.push(match[1]);
+        if (match[2]) tokens.push(Number(match[2]));
+      }
+
+      let current = obj;
+      let parent = null;
+      let lastKey = null;
+
+      for (let token of tokens) {
+        parent = current;
+        lastKey = token;
+        current = current?.[token];
+      }
+
+      if (parent !== null && lastKey !== null && parent.hasOwnProperty(lastKey)) {
+        const result = { [lastKey]: parent[lastKey] };
+        setOutput(JSON.stringify(result, null, 2));
+      } else {
+        setOutput(JSON.stringify(current, null, 2));
+      }
+    } catch (err) {
+      setError('Error querying JSON. Please check your JSONPath expression.');
       setOutput('');
     }
   };
